@@ -45,14 +45,9 @@ node {
 
             # Pastikan branch target ada
             git fetch origin react-app
-            if ! git rev-parse --verify react-app > /dev/null 2>&1; then
-                echo "Branch react-app tidak ada. Membuat branch baru..."
-                git checkout -b react-app
-                git push --set-upstream origin react-app
-            else
-                git checkout react-app
-                git pull origin react-app
-            fi
+            git checkout react-app
+            git pull origin react-app
+
 
             echo 'Adding build files to Git and pushing to repository...'
             if [ -z "$(ls -A build)" ]; then
