@@ -37,7 +37,7 @@ node {
             git config --global --add safe.directory /var/jenkins_home/workspace/react-app
 
             # Pastikan Git sudah diinisialisasi
-            if [ ! -d ".git" ]; then
+            
                 echo "Initializing Git repository..."
                 git init
                 git remote set-url origin https://github.com/RestuAlamBagaskara/a428-cicd-labs.git
