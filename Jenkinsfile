@@ -1,10 +1,73 @@
 node {
-    docker.image('node:16-buster-slim').inside('-p 3000:3000') {
+    docker.image('node:16-buster-slim').inside('-p 3000:3000 --user root') {
+        stage('Setup Environment') {
+            sh '''
+            echo "Checking if Git is installed..."
+            if ! command -v git &> /dev/null; then
+                echo "Git is not installed. Installing Git..."
+                apt-get update && apt-get install -y git
+            else
+                echo "Git is already installed."
+            fi
+            '''
+        }
         stage('Build') {
             sh 'npm install'
         }
         stage('Test') {
             sh './jenkins/scripts/test.sh'
+        }
+        stage('Manual Approval') {
+            try {
+                input message: 'Apakah Anda ingin melanjutkan ke tahap deploy?',
+                      ok: 'Proceed',
+                      parameters: []
+            } catch (err) {
+                echo "Pipeline dihentikan oleh pengguna pada tahap Manual Approval."
+                currentBuild.result = 'ABORTED'
+                error("Pipeline dihentikan oleh pengguna.")
+            }
+        }
+        stage('Deploy') {
+            sh './jenkins/scripts/deliver.sh'
+            sh '''
+            echo 'Configuring Git in Docker environment...'
+            git config --global user.name "Your Name"
+            git config --global user.email "your.email@example.com"
+            git config --global --add safe.directory /var/jenkins_home/workspace/react-app
+
+            # Pastikan Git sudah diinisialisasi
+            if [ ! -d ".git" ]; then
+                echo "Initializing Git repository..."
+                git init
+                git remote set-url origin https://github.com/RestuAlamBagaskara/a428-cicd-labs.git
+            fi
+
+            # Pastikan branch target ada
+            git fetch origin
+            if ! git rev-parse --verify react-app > /dev/null 2>&1; then
+                echo "Branch react-app tidak ada. Membuat branch baru..."
+                git checkout -b react-app
+                git push --set-upstream origin react-app
+            else
+                git checkout react-app
+                git pull origin react-app
+            fi
+
+            echo 'Adding build files to Git and pushing to repository...'
+            if [ -z "$(ls -A build)" ]; then
+                echo "Error: Build directory is empty. Nothing to add to Git."
+                exit 1
+            fi
+
+            git add build/
+            git status
+            git commit -m "Jenkins: Deployed build files via deliver.sh" || echo "No changes to commit"
+            git push origin react-app --verbose || echo "Failed to push changes"
+            '''
+            sleep 60
+            input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)'
+            sh './jenkins/scripts/kill.sh'
         }
     }
 }
