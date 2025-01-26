@@ -38,10 +38,10 @@ node {
 
             # Pastikan Git sudah diinisialisasi
             
-                echo "Initializing Git repository..."
-                git init
-                git remote set-url origin https://github.com/RestuAlamBagaskara/a428-cicd-labs.git
-            fi
+            echo "Initializing Git repository..."
+            git init
+            git remote set-url origin https://github.com/RestuAlamBagaskara/a428-cicd-labs.git
+            
 
             # Pastikan branch target ada
             git fetch origin react-app
@@ -60,7 +60,7 @@ node {
                 exit 1
             fi
 
-            git add build/
+            git add .
             git status
             git commit -m "Jenkins: Deployed build files via deliver.sh" || echo "No changes to commit"
             git push origin react-app --verbose || echo "Failed to push changes"
