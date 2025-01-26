@@ -30,6 +30,7 @@ node {
         }
         stage('Deploy') {
             sh './jenkins/scripts/deliver.sh'
+            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
             sh '''
             echo 'Configuring Git in Docker environment...'
             git config --global user.name "Your Name"
@@ -40,7 +41,7 @@ node {
             
             echo "Initializing Git repository..."
             git init
-            git remote set-url origin https://github.com/RestuAlamBagaskara/a428-cicd-labs.git
+            git remote set-url origin https://${GITHUB_TOKEN}@github.com/RestuAlamBagaskara/a428-cicd-labs.git
             
 
             # Pastikan branch target ada
@@ -60,6 +61,7 @@ node {
             git commit -m "Jenkins: Deployed build files via deliver.sh" || echo "No changes to commit"
             git push origin react-app --verbose || echo "Failed to push changes"
             '''
+            }
             sleep 60
             input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)'
             sh './jenkins/scripts/kill.sh'
