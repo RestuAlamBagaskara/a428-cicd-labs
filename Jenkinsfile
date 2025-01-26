@@ -44,7 +44,7 @@ node {
             fi
 
             # Pastikan branch target ada
-            git fetch origin
+            git fetch origin react-app
             if ! git rev-parse --verify react-app > /dev/null 2>&1; then
                 echo "Branch react-app tidak ada. Membuat branch baru..."
                 git checkout -b react-app
